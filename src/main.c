@@ -6,6 +6,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
+#define true 1
+#define false 0
+
 typedef struct CStrVec{
     char** data;
     int size;
@@ -44,6 +47,8 @@ int main(int argc, char** argv){
 
     CStrVec environment={};
     CStrVecPushBack(&environment, "TERM=alacritty");
+    printf("shell: ");
+    fflush(stdout);
     while((fgets(userInputBuffer, inputBufferLength, stdin)) > 0){
         int l = strlen(userInputBuffer);
         int b1 = l - 1;
@@ -57,7 +62,10 @@ int main(int argc, char** argv){
         char* argv1 = malloc(b1 + 1);
         memcpy(argv1, userInputBuffer, b1);
         argv1[b1] = 0;
-
+        if(strcmp(argv1, "exit") == 0){
+            free(argv1);
+            break;
+        }
         CStrVec vec={NULL,0};
         CStrVecPushBack(&vec, argv1);
         int lastStart = b1 + 1;
@@ -88,6 +96,7 @@ int main(int argc, char** argv){
         int programNameLen = strlen(programName);
         int pathLen = strlen(path);
         lastStart = 0;
+        int locatedProgram = 0;
         for(i = 0; i < pathLen; i++){
             char c = path[i];
             if(c != ':')continue;
@@ -113,9 +122,8 @@ int main(int argc, char** argv){
             memcpy(programPath, str, newLen);
             memcpy(programPath + programOffset, programName, programNameLen);
             FILE* program = fopen(programPath, "r");
-            if(!program){
-                goto clean;
-            }
+            if(!program)goto clean;
+            locatedProgram = true;
             fflush(stdout);
             int pid = fork();
             if(pid == 0){
@@ -126,6 +134,10 @@ int main(int argc, char** argv){
         clean:
             free(str);
         }
+        if(!locatedProgram)
+            printf("%s is not recognized as a command\n", argv1);
         CStrVecCleanUp(&vec);
+        printf("shell: ");
+        fflush(stdout);
     }
 }
