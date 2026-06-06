@@ -64,6 +64,7 @@ int main(int argc, char** argv){
         argv1[b1] = 0;
         if(strcmp(argv1, "exit") == 0){
             free(argv1);
+            free(userInputBuffer);
             break;
         }
         CStrVec vec={NULL,0};
